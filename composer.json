@@ -1,5 +1,5 @@
 {
-	"name":"danzabar/phalcon-cli",
+	"name":"tokict/phalcon-cli",
 	"description": "Tools that extend the functionality of the Phalcon frameworks CLI",
 	"license":"MIT",
 	"authors": [
