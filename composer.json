@@ -13,11 +13,11 @@
 		"symfony/process": "4.1@dev"
 	},
 	"require-dev": {
-        "symfony/yaml": ">2.7.0@dev",
-        "symfony/config": ">2.7.0@dev",
-        "symfony/console": "4.0.4@dev",
-        "symfony/filesystem": ">2.7.0@dev",
-        "symfony/stopwatch": ">2.7.0@dev",
+        "symfony/yaml": "4.1@dev",
+        "symfony/config": "4.1@dev",
+        "symfony/console": "4.1@dev",
+        "symfony/filesystem": "4.1@dev",
+        "symfony/stopwatch": "4.1@dev",
 		"satooshi/php-coveralls": "v1.0.0",
 		"mockery/mockery": "dev-master",
         "squizlabs/php_codesniffer": "dev-master"
