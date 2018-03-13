@@ -21,15 +21,33 @@ class Question extends Helper
     protected $wrongChoiceErrorMessage = 'The answer you selected is invalid.';
 
     /**
+    *Save the question here so we can repeat it in case of bad choice
+     */
+    protected $lastQuestion = null;
+
+    /**
      * Asks a basic question and returns the response.
-     *
+     * @param $question | Asked question
+     * @param $required | It will ask again if no answer is provided and no default
+     * @param $default | Default answer if none provided
      * @return String
      */
-    public function ask($question)
+    public function ask($question, $required = true, $default = null)
     {
-        $this->output->writeln($question);
+        $this->lastQuestion = $question;
+        $def = $default?' ['.$default.']':'';
+        $this->output->writeln(Color::paint($question.$def, Color::yellow));
 
-        return $this->input->getInput();
+         $answer = $this->input->getInput();
+         if(!$answer && $required){
+             if($default){
+                 return $default;
+             }
+             $this->ask($question, true, $default);
+         }
+
+         return $answer;
+
     }
 
     /**
@@ -39,23 +57,35 @@ class Question extends Helper
      */
     public function setChoiceError($error)
     {
-        $this->wrongChoiceErrorMessage = $error;
+        $this->wrongChoiceErrorMessage = Color::paint($error, Color::red);
     }
 
     /**
      * The choice question, pick a single choice.
-     *
+     * @param $question | Asked question
+     * @param $choice | Available choices
+     * @param $allowedMultiple | Are multiple comma separated answers allowed
+     * @param $default | Default value if no answer provided
      * @return String
      */
-    public function choice($question, $choices = array(), $allowedMultiple = false)
+    public function choice($question, $choices = array(), $allowedMultiple = false, $default = null)
     {
-        $this->output->writeln($question);
+        $this->lastQuestion = $question;
+        $def = $default?' ['.$default.']':'';
+        $this->output->writeln(Color::paint($question. $def, Color::yellow));
 
-        $this->output->writeln(join(',', $choices));
+        foreach ($choices as $key => $choice) {
+            $this->output->write($key . ' => ');
+            $this->output->writeln($choice . PHP_EOL);
+        }
 
         $answer = $this->input->getInput();
 
-        $valid = $this->validateChoices($answer, $choices, $allowedMultiple);
+        //If there is no answer and default is set, use default as answer
+        !$answer && $default?$answer = $default:null;
+
+
+        $valid = $this->validateChoices($answer, $choices, $allowedMultiple, $default);
 
         if ($valid !== false) {
             return $valid;
@@ -63,7 +93,7 @@ class Question extends Helper
 
         $this->output->writeln($this->wrongChoiceErrorMessage);
 
-        return false;
+        $this->choice($question, $choices, $allowedMultiple);
     }
 
     /**
@@ -71,9 +101,9 @@ class Question extends Helper
      *
      * @return void
      */
-    public function multipleChoice($question, $choices = array())
+    public function multipleChoice($question, $choices = array(), $allowedMultiple = false, $default = null)
     {
-        return $this->choice($question, $choices, true);
+        return $this->choice($question, $choices, $allowedMultiple, $default);
     }
 
     /**
@@ -97,11 +127,16 @@ class Question extends Helper
      */
     public function validateSingleChoice($answer, $choice)
     {
-        if (!in_array(trim($answer), $choice)) {
+        //If the answer is number check if there is an index in answers
+        if (is_numeric($answer) && !isset($choice[$answer])) {
             return false;
         }
 
-        return $answer;
+        if (!is_numeric($answer) && !in_array(trim($answer), $choice)) {
+            return false;
+        }
+
+        return is_numeric($answer)?$choice[$answer]:$answer;
     }
 
     /**
@@ -114,11 +149,22 @@ class Question extends Helper
         $answers = explode(',', $answer);
 
         foreach ($answers as $ans) {
-            if (!in_array(trim($ans), $choice)) {
+
+            //If the answer is number check if there is an index in answers
+            if (is_numeric($ans) && !isset($choice[(int)$ans])) {
                 return false;
             }
 
-            $formatedAnswers[] = trim($ans);
+            if (!is_numeric($ans) && !in_array(trim($ans), $choice)) {
+                return false;
+            }
+
+            if(is_numeric($ans)){
+                $a = $choice[$ans];
+            }else{
+                $a = $ans;
+            }
+            $formatedAnswers[] = trim($a);
         }
 
         return $formatedAnswers;
